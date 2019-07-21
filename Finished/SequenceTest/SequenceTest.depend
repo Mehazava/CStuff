@@ -1,0 +1,12 @@
+# depslib dependency file v1.0
+1562408377 source:e:\work\programs\semester 2\c\linear sec\sequencetest\linear_secuence.c
+	"linear_sequence.h"
+
+1562216788 e:\work\programs\semester 2\c\linear sec\sequencetest\linear_sequence.h
+	<stdlib.h>
+
+1562408668 source:e:\work\programs\semester 2\c\linear sec\sequencetest\main.c
+	<stdio.h>
+	<stdlib.h>
+	"linear_sequence.h"
+
