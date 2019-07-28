@@ -21,10 +21,9 @@ int GetFileStats(char *FullFP, FStatA *FileStats){
 
     if(stat(FullFP, &CurStat) == -1){
         printf("E: couldn't get info on %s\n", FullFP);
-        free(FullFP);
         return 1;
     }else{
-        //0 is all the rrwrwerwrw crap
+        //0 is all the rrwrwerwrw cr
         sprintf((*FileStats)[1], "%ld", CurStat.st_nlink);
         pwd = getpwuid(CurStat.st_uid);
         if(!(pwd)){
@@ -60,6 +59,7 @@ int DoIt(char *SPath){
     FStatA *FileStats;
     int FilesInDir = 0;
 
+    char *FullFP;
     DIR *Path = opendir(SPath);
     char *FileName;
     struct dirent *CurFile;
@@ -77,12 +77,13 @@ int DoIt(char *SPath){
     Path = opendir(SPath);
     while(CurFile = readdir(Path)){//fill the stat table
 
-        char *FullFP;
         FullFP = malloc(sizeof(char)*(strlen(SPath)+strlen(CurFile->d_name)+2));
         strcpy(FullFP, SPath);
         strcpy(FullFP + strlen(SPath),"/\0");
         strcpy(FullFP + strlen(FullFP), CurFile->d_name);
-        GetFileStats(FullFP, FileStats + FilesInDir);
+        if(GetFileStats(FullFP, FileStats + FilesInDir)){
+		return 1;
+	}
         sprintf(FileStats[FilesInDir][7], "%s", CurFile->d_name);
         free(FullFP);
         FilesInDir++;
@@ -119,8 +120,19 @@ int DoIt(char *SPath){
             if(++i >= FilesInDir){Flag1 = 0;}
         }
     }
-    if(Recur){//if recursive call is on do it
-
+    if(Recur){//if recursive call is on do it for all cats
+        for(i = 0; i < FilesInDir; i++){
+            if((strcmp(FileStats[i][8], "/") == 0)&&(FileStats[i][7][0] != '.')){
+                printf("\nList of files inside %s/:\n", FileStats[i][7]);
+                FullFP = malloc(sizeof(char)*(strlen(SPath)+strlen(FileStats[i][7])+2));
+                strcpy(FullFP, SPath);
+                strcpy(FullFP + strlen(SPath),"/\0");
+                strcpy(FullFP + strlen(FullFP), FileStats[i][7]);
+                DoIt(FullFP);
+                free(FullFP);
+                printf("\n");
+            }
+        }
     }
     free(FileStats);
     return 0;
@@ -157,7 +169,7 @@ int main(int argc, char **argv){
                     return 1;
             }
         }else if(ArgNamed == 0){
-            printf("~~argfilerecorded~~\n");
+            //printf("~~argfilerecorded~~\n");
             strcpy(ArgFile, argv[i]);
             ArgNamed = 1;
         }else{
@@ -172,7 +184,9 @@ int main(int argc, char **argv){
 
     FStatA *FileStats;
     FileStats = malloc(sizeof(FStatA));
-    GetFileStats(PathString, FileStats);
+    if(GetFileStats(PathString, FileStats)){
+		return 1;
+    }
     sprintf(FileStats[0][7], "%s", strrchr(PathString, '/') + 1);
     if((NoCat) || (FileStats[0][8][0] != '/')){
         if(ListAttr){
